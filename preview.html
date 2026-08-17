@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>column-科了</title>
+<style>
+  :root {
+    --ustc-blue: #0055A4;
+    --ustc-blue-dark: #003D7A;
+    --ustc-blue-light: #E8F0FA;
+    --ustc-blue-10: #F2F6FC;
+    --ink-primary: #1A1A2E;
+    --ink-secondary: #6B7280;
+    --ink-muted: #9CA3AF;
+    --surface: #FFFFFF;
+    --surface-secondary: #F8F9FB;
+    --border: #E5E7EB;
+    --border-light: #F3F4F6;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--surface-secondary);
+    color: var(--ink-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Navigation ── */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; color: var(--ustc-blue);
+    font-size: 22px; font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .nav-brand .logo-icon {
+    width: 38px; height: 38px;
+    background: var(--ustc-blue);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 18px; font-weight: 800;
+  }
+  .nav-links {
+    display: flex; align-items: center; gap: 4px;
+    list-style: none;
+  }
+  .nav-links a {
+    text-decoration: none; color: var(--ink-secondary);
+    padding: 6px 16px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500;
+    transition: all 0.15s;
+  }
+  .nav-links a:hover, .nav-links a.active {
+    color: var(--ustc-blue);
+    background: var(--ustc-blue-10);
+  }
+  .nav-actions {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .btn {
+    padding: 8px 20px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    border: none; font-family: inherit;
+    transition: all 0.15s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-outline {
+    background: transparent; color: var(--ustc-blue);
+    border: 1.5px solid var(--ustc-blue);
+  }
+  .btn-outline:hover { background: var(--ustc-blue-10); }
+  .btn-primary {
+    background: var(--ustc-blue); color: #fff;
+  }
+  .btn-primary:hover { background: var(--ustc-blue-dark); }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(160deg, #F0F5FB 0%, #E3ECF7 40%, #D6E3F3 100%);
+    padding: 64px 24px 72px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -120px; right: -120px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(0,85,164,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero::after {
+    content: '';
+    position: absolute; bottom: -80px; left: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(0,85,164,0.04) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-inner { max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero h1 {
+    font-size: 44px; font-weight: 800; color: var(--ink-primary);
+    letter-spacing: 1px; margin-bottom: 12px;
+  }
+  .hero h1 .highlight { color: var(--ustc-blue); }
+  .hero p {
+    font-size: 17px; color: var(--ink-secondary);
+    margin-bottom: 32px; line-height: 1.7;
+  }
+  .hero-stats {
+    display: flex; justify-content: center; gap: 48px;
+    margin-top: 40px;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat .num {
+    font-size: 28px; font-weight: 700; color: var(--ustc-blue);
+  }
+  .hero-stat .label {
+    font-size: 13px; color: var(--ink-muted); margin-top: 2px;
+  }
+
+  /* ── Main Layout ── */
+  .main-container {
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    margin-top: -24px; position: relative; z-index: 2;
+  }
+
+  /* ── Feed ── */
+  .feed { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Create post */
+  .create-post {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+  }
+  .create-post textarea {
+    width: 100%; border: 1.5px solid var(--border);
+    border-radius: var(--radius-md); padding: 14px 16px;
+    font-size: 15px; font-family: inherit; resize: none;
+    min-height: 80px; outline: none; color: var(--ink-primary);
+    transition: border-color 0.15s;
+  }
+  .create-post textarea:focus { border-color: var(--ustc-blue); }
+  .create-post textarea::placeholder { color: var(--ink-muted); }
+  .create-post-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 12px;
+  }
+  .post-tools { display: flex; gap: 4px; }
+  .post-tool {
+    width: 34px; height: 34px; border-radius: var(--radius-sm);
+    border: none; background: transparent; cursor: pointer;
+    color: var(--ink-secondary); font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .post-tool:hover { background: var(--surface-secondary); color: var(--ustc-blue); }
+
+  /* Post Card */
+  .post-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+    transition: box-shadow 0.2s;
+  }
+  .post-card:hover { box-shadow: var(--shadow-md); }
+  .post-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, #E8F0FA, #D0E1F5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: var(--ustc-blue);
+    flex-shrink: 0;
+  }
+  .post-meta { flex: 1; }
+  .post-author { font-size: 15px; font-weight: 600; color: var(--ink-primary); }
+  .post-info {
+    font-size: 12px; color: var(--ink-muted);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .post-badge {
+    font-size: 11px; padding: 1px 8px; border-radius: 100px;
+    font-weight: 600;
+  }
+  .badge-alumni { background: #E8F0FA; color: var(--ustc-blue); }
+  .badge-student { background: #FFF7ED; color: #C2410C; }
+  .post-body { font-size: 15px; line-height: 1.75; margin-bottom: 14px; }
+  .post-body .topic-tag {
+    color: var(--ustc-blue); font-weight: 500;
+    cursor: pointer;
+  }
+  .post-body .topic-tag:hover { text-decoration: underline; }
+  .post-image {
+    width: 100%; border-radius: var(--radius-md);
+    margin-bottom: 14px; max-height: 360px; object-fit: cover;
+  }
+  .post-actions {
+    display: flex; gap: 24px; padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+  }
+  .post-action {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 13px; color: var(--ink-muted);
+    cursor: pointer; border: none; background: none;
+    font-family: inherit; padding: 4px 8px; border-radius: var(--radius-sm);
+    transition: all 0.15s;
+  }
+  .post-action:hover { color: var(--ustc-blue); background: var(--ustc-blue-10); }
+
+  /* ── Sidebar ── */
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+  .sidebar-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+  }
+  .sidebar-card h3 {
+    font-size: 15px; font-weight: 700; color: var(--ink-primary);
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .sidebar-card h3 .icon { font-size: 18px; }
+
+  /* Hot topics */
+  .topic-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .topic-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: background 0.15s;
+    font-size: 14px;
+  }
+  .topic-item:hover { background: var(--surface-secondary); }
+  .topic-rank { font-weight: 700; color: var(--ink-muted); font-size: 13px; width: 20px; }
+  .topic-rank.hot { color: #EF4444; }
+  .topic-name { flex: 1; font-weight: 500; }
+  .topic-count { font-size: 12px; color: var(--ink-muted); }
+
+  /* Upcoming events */
+  .event-item {
+    display: flex; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .event-item:last-child { border-bottom: none; }
+  .event-date {
+    width: 44px; height: 44px; border-radius: var(--radius-sm);
+    background: var(--ustc-blue-10); color: var(--ustc-blue);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; flex-shrink: 0;
+    font-weight: 700; font-size: 16px; line-height: 1;
+  }
+  .event-date small { font-size: 10px; font-weight: 500; }
+  .event-info h4 { font-size: 14px; font-weight: 600; }
+  .event-info p { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+
+  /* Alumni online */
+  .alumni-grid {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .alumni-dot {
+    width: 36px; height: 36px; border-radius: 50%;
+    cursor: pointer; transition: transform 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: #fff;
+  }
+  .alumni-dot:hover { transform: scale(1.15); }
+
+  /* ── Section Title ── */
+  .section-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4px;
+  }
+  .section-header h2 {
+    font-size: 18px; font-weight: 700;
+  }
+  .section-header a {
+    font-size: 13px; color: var(--ustc-blue); text-decoration: none;
+    font-weight: 500;
+  }
+  .section-header a:hover { text-decoration: underline; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 48px; padding: 32px 24px;
+    border-top: 1px solid var(--border);
+    text-align: center; color: var(--ink-muted); font-size: 13px;
+  }
+  .footer strong { color: var(--ink-secondary); }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .main-container { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .hero h1 { font-size: 32px; }
+    .hero-stats { gap: 24px; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <span class="logo-icon">科</span>
+      科了
+    </a>
+    <ul class="nav-links">
+      <li><a href="#" class="active">首页</a></li>
+      <li><a href="#">广场</a></li>
+      <li><a href="#">校友圈</a></li>
+      <li><a href="#">活动</a></li>
+      <li><a href="#">专栏</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="#" class="btn btn-outline">登录</a>
+      <a href="#" class="btn btn-primary">注册</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <h1>今天<span class="highlight">科了</span>没？</h1>
+    <p>
+      无论你在哪里，科大永远是你的坐标原点。
+    </p>
+    <a href="#" class="btn btn-primary" style="font-size:15px; padding:12px 28px;">加入校友社区</a>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">12,860</div><div class="label">认证校友</div></div>
+      <div class="hero-stat"><div class="num">38</div><div class="label">城市分会</div></div>
+      <div class="hero-stat"><div class="num">156</div><div class="label">本月活动</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<div class="main-container">
+
+  <!-- Feed -->
+  <div class="feed">
+
+    <!-- Create Post -->
+    <div class="create-post">
+      <textarea placeholder="分享你在科大的故事、近况，或者随便聊聊..."></textarea>
+      <div class="create-post-actions">
+        <div class="post-tools">
+          <button class="post-tool" title="图片">🖼</button>
+          <button class="post-tool" title="话题">#</button>
+          <button class="post-tool" title="@校友">@</button>
+          <button class="post-tool" title="表情">😊</button>
+        </div>
+        <button class="btn btn-primary">发布</button>
+      </div>
+    </div>
+
+    <!-- Post 1 -->
+    <div class="post-card">
+      <div class="post-header">
+        <div class="avatar">张</div>
+        <div class="post-meta">
+          <div class="post-author">张明远</div>
+          <div class="post-info">
+            <span class="post-badge badge-alumni">校友 · 14级</span>
+            <span>计算机学院</span>
+            <span>· 3小时前</span>
+          </div>
+        </div>
+      </div>
+      <div class="post-body">
+        离开科大十年了，今天回到合肥出差，特意去西区转了转。<span class="topic-tag">#也西湖</span> 还是那么安静，图书馆门口的猫还在。在<span class="topic-tag">#科大回忆</span> 里翻到了当年在实验室通宵的照片，时间过得真快啊。
+      </div>
+      <div class="post-actions">
+        <button class="post-action">❤️ 126</button>
+        <button class="post-action">💬 38 评论</button>
+        <button class="post-action">🔄 12 转发</button>
+        <button class="post-action">⭐ 收藏</button>
+      </div>
+    </div>
+
+    <!-- Post 2 -->
+    <div class="post-card">
+      <div class="post-header">
+        <div class="avatar" style="background:linear-gradient(135deg,#FEE2E2,#FECACA);color:#DC2626;">李</div>
+        <div class="post-meta">
+          <div class="post-author">李雨桐</div>
+          <div class="post-info">
+            <span class="post-badge badge-student">在校 · 21级</span>
+            <span>物理学院</span>
+            <span>· 5小时前</span>
+          </div>
+        </div>
+      </div>
+      <div class="post-body">
+        <span class="topic-tag">#求助</span> 想问一下在硅谷的校友们，物理PhD转Quant或DS的话，需要补哪些技能？目前在做凝聚态实验，但想探索一下业界的可能性。感谢！<span class="topic-tag">#职业发展</span> <span class="topic-tag">#硅谷校友</span>
+      </div>
+      <div class="post-actions">
+        <button class="post-action">❤️ 89</button>
+        <button class="post-action">💬 56 评论</button>
+        <button class="post-action">🔄 3 转发</button>
+        <button class="post-action">⭐ 收藏</button>
+      </div>
+    </div>
+
+    <!-- Post 3 -->
+    <div class="post-card">
+      <div class="post-header">
+        <div class="avatar" style="background:linear-gradient(135deg,#D1FAE5,#A7F3D0);color:#059669;">王</div>
+        <div class="post-meta">
+          <div class="post-author">王浩然</div>
+          <div class="post-info">
+            <span class="post-badge badge-alumni">校友 · 08级</span>
+            <span>信院</span>
+            <span>· 8小时前</span>
+          </div>
+        </div>
+      </div>
+      <div class="post-body">
+        <span class="topic-tag">#上海校友聚会</span> 本周六下午2点，在徐汇区我们公司会议室举办小型校友技术分享会，主题是「从实验室到大模型：科大人在AI赛道的十年」。场地有限，感兴趣的私聊我报名！
+      </div>
+      <div class="post-actions">
+        <button class="post-action">❤️ 203</button>
+        <button class="post-action">💬 72 评论</button>
+        <button class="post-action">🔄 28 转发</button>
+        <button class="post-action">⭐ 收藏</button>
+      </div>
+    </div>
+
+    <!-- Load more -->
+    <div style="text-align:center;padding:12px 0;">
+      <button class="btn btn-outline" style="padding:10px 32px;">加载更多</button>
+    </div>
+
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <!-- Hot Topics -->
+    <div class="sidebar-card">
+      <h3><span class="icon">🔥</span> 热门话题</h3>
+      <ul class="topic-list">
+        <li class="topic-item">
+          <span class="topic-rank hot">1</span>
+          <span class="topic-name">#上海校友聚会</span>
+          <span class="topic-count">2.3k</span>
+        </li>
+        <li class="topic-item">
+          <span class="topic-rank hot">2</span>
+          <span class="topic-name">#科大回忆</span>
+          <span class="topic-count">1.8k</span>
+        </li>
+        <li class="topic-item">
+          <span class="topic-rank hot">3</span>
+          <span class="topic-name">#职业发展</span>
+          <span class="topic-count">1.5k</span>
+        </li>
+        <li class="topic-item">
+          <span class="topic-rank">4</span>
+          <span class="topic-name">#硅谷校友</span>
+          <span class="topic-count">892</span>
+        </li>
+        <li class="topic-item">
+          <span class="topic-rank">5</span>
+          <span class="topic-name">#学术讨论</span>
+          <span class="topic-count">756</span>
+        </li>
+        <li class="topic-item">
+          <span class="topic-rank">6</span>
+          <span class="topic-name">#也西湖</span>
+          <span class="topic-count">643</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Upcoming Events -->
+    <div class="sidebar-card">
+      <h3><span class="icon">📅</span> 近期活动</h3>
+      <div class="event-item">
+        <div class="event-date">15<small>8月</small></div>
+        <div class="event-info">
+          <h4>上海校友AI技术分享</h4>
+          <p>徐汇区 · 14:00</p>
+        </div>
+      </div>
+      <div class="event-item">
+        <div class="event-date">22<small>8月</small></div>
+        <div class="event-info">
+          <h4>北京校友迎新聚餐</h4>
+          <p>海淀区 · 18:30</p>
+        </div>
+      </div>
+      <div class="event-item">
+        <div class="event-date">05<small>9月</small></div>
+        <div class="event-info">
+          <h4>硅谷校友线上圆桌</h4>
+          <p>Zoom · 10:00 (PT)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Online Alumni -->
+    <div class="sidebar-card">
+      <h3><span class="icon">🟢</span> 在线的校友</h3>
+      <div class="alumni-grid">
+        <div class="alumni-dot" style="background:#0055A4;" title="张明远">张</div>
+        <div class="alumni-dot" style="background:#2563EB;" title="李雨桐">李</div>
+        <div class="alumni-dot" style="background:#7C3AED;" title="王浩然">王</div>
+        <div class="alumni-dot" style="background:#059669;" title="赵思涵">赵</div>
+        <div class="alumni-dot" style="background:#D97706;" title="陈宇">陈</div>
+        <div class="alumni-dot" style="background:#DC2626;" title="刘畅">刘</div>
+        <div class="alumni-dot" style="background:#0891B2;" title="周明">周</div>
+        <div class="alumni-dot" style="background:#4F46E5;" title="吴桐">吴</div>
+        <div class="alumni-dot" style="background:#9333EA;" title="+126">+</div>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <strong>科了</strong> — 中国科学技术大学校友社区 &nbsp;|&nbsp; column.ustc.edu.cn<br>
+  <span style="font-size:12px;">非官方校友平台 · 为科大人而建</span>
+</footer>
+
+</body>
+</html>

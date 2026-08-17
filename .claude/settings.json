@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(open /Users/adamlee/Documents/column-科了没/preview.html)",
+      "Bash(npm -v)",
+      "Bash(npm create *)",
+      "Bash(npm init *)",
+      "Bash(echo \"===exit $?===\")",
+      "Bash(npm install *)",
+      "Bash(node -e \"const v=require\\('./node_modules/@supabase/supabase-js/package.json'\\).version; console.log\\('supabase-js version:', v\\)\")",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(curl -s \"https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/topics?select=*\" -H \"apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C\" -H \"Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C\")",
+      "Bash(curl -s \"https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/posts?select=*\" -H \"apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C\" -H \"Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C\")",
+      "Bash(pkill -f \"vite\")",
+      "Bash(curl -s https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/topics?select=* -H 'apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C' -H 'Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C')",
+      "Bash(curl -s https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/events?select=* -H 'apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C' -H 'Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C')",
+      "Bash(curl -s https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/posts?select=* -H 'apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C' -H 'Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C')",
+      "Bash(curl -s https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/profiles?select=* -H 'apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C' -H 'Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C')",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(curl -s 'https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/posts?select=*,author:profiles!author_id\\(*\\)' -H 'apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C' -H 'Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C')",
+      "Bash(curl -s https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/profiles?select=graduation_year,is_alumni,profile_type -H 'apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C' -H 'Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C')",
+      "Bash(curl -s https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/profiles?select=graduation_year,is_alumni -H 'apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C' -H 'Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C')",
+      "Bash(curl -s 'https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/posts?select=id,comment_count,comments\\(count\\)' -H 'apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C' -H 'Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C')",
+      "Bash(curl -s 'https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/posts?select=id,like_count,likes\\(count\\)' -H 'apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C' -H 'Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C')",
+      "Bash(lsof -ti:5173)",
+      "Bash(xargs kill)",
+      "Bash(ipconfig getifaddr *)"
+    ]
+  }
+}
