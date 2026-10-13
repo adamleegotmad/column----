@@ -1,0 +1,128 @@
+{
+  "name": "kela-storage-arch",
+  "id": "kela-storage-arch",
+  "description": "整体优化「科了」项目结构，分析 WebDAV 桥接网站所需的全部工作，并汇总成一份可执行的架构文档",
+  "captainSessionId": "session-4fbd5737-cfe8-4bf9-8ed3-256479cf8e53",
+  "createdAt": 1789467555471,
+  "phase": "running",
+  "members": [
+    {
+      "id": "",
+      "name": "architect",
+      "role": "架构审计：盘点 src/ 结构、识别分层违规与重复、产出结构优化建议清单",
+      "provider": "ustc-gateway",
+      "model": "deepseek-flash",
+      "joinedAt": 1789467555471,
+      "status": "idle"
+    },
+    {
+      "id": "",
+      "name": "dav-analyst",
+      "role": "WebDAV 桥接分析：梳理桥接网站与 Seafile 之间尚未完成的全链路事项（上传/显示/迁移/权限/离线）",
+      "provider": "ustc-gateway",
+      "model": "deepseek-flash",
+      "joinedAt": 1789467555471,
+      "status": "idle"
+    },
+    {
+      "id": "",
+      "name": "security",
+      "role": "安全与凭据审计：审查 localStorage 凭据、CORS、匿名可读、密钥泄漏风险",
+      "provider": "ustc-gateway",
+      "model": "deepseek-flash",
+      "joinedAt": 1789467555471,
+      "status": "idle"
+    },
+    {
+      "id": "",
+      "name": "writer",
+      "role": "汇总撰写：把三方结论合并成单一架构文档，去重、裁决冲突、给出优先级",
+      "provider": "ustc-gateway",
+      "model": "deepseek-flash",
+      "joinedAt": 1789467555471,
+      "status": "idle"
+    },
+    {
+      "id": "",
+      "name": "reviewer",
+      "role": "校验：核对文档中每条结论都能在代码中定位，且未与实测事实矛盾",
+      "provider": "ustc-gateway",
+      "model": "deepseek-flash",
+      "joinedAt": 1789467555471,
+      "status": "idle"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "profileSeedId": "audit-structure",
+      "subject": "审计 src/ 目录结构与分层",
+      "description": "阅读 C:\\columa\\column----\\src 下全部 .ts/.tsx（lib 13 个文件、components 21 个、pages 4 个），产出结构审计结论。必须具体到文件与行号证据。重点核查：\n1. 分层是否清晰：pages / components / lib / hooks 的职责边界是否有违规（如组件直接调 supabase、lib 反向 import 组件）。已知 src\\components\\SeafileSection.tsx 同时 import 了 webdav 与 imageRef 两层的函数，属于 UI 直接编排存储层，请评估。\n2. 是否存在重复逻辑：例如 src\\lib\\storage.ts 的 displayUrl() 与 activeBackend() 与 needsAuthToLoad() 三处各自重复判断 `cfg.backend === 'custom' && cfg.customBaseUrl`；screen 组件里是否重复了「未配置凭据」的默认地址 'https://pan.ustc.edu.cn/seafdav'。\n3. src\\lib\\data.ts 已 379 行、承担 posts/topics/profiles/likes/comments/favorites 六类实体的全部查询，评估是否应按实体拆分，并给出拆分后的文件清单与每个导出函数的归属。\n4. localStorage 的使用分散在 webdav.ts(凭据)、imageRef.ts(存储配置)、announcement.ts(已读)、fontScale.ts(字号) 四处，评估是否应收口到一个统一的持久化模块。\n5. 命名与类型：src\\lib\\types.ts 是否覆盖了所有实体；storage.ts 里的 StoredImage.backend 与 imageRef.ts 的 ImageBackend 是否为重复概念。\n输出：按「问题 → 证据(文件:行号) → 建议改法 → 优先级(高/中/低)」组织的结论清单。不要修改任何代码。",
+      "status": "pending",
+      "assignee": "architect",
+      "dependencies": [],
+      "attempt": 6,
+      "createdAt": 1789467555471,
+      "updatedAt": 1789484335449,
+      "reassigning": false
+    },
+    {
+      "id": "t2",
+      "profileSeedId": "audit-bridge",
+      "subject": "分析 WebDAV 桥接网站的全链路待办",
+      "description": "分析「网站 ↔ Seafile WebDAV」桥接还差哪些事才能真正可用。基于已实测事实：匿名 GET / → 401 Basic realm=\"Seafile Authentication\"；匿名 PROPFIND / → 401；匿名深层路径 → 401。读 src\\lib\\webdav.ts、src\\lib\\storage.ts、src\\lib\\imageRef.ts、src\\components\\PostImage.tsx、src\\components\\SeafileSection.tsx、scripts\\seafile-probe.mjs、scripts\\storage-migrate.mjs。\n必须逐项分析并给出结论：\n1. 显示链路：图片存 Seafile 后，未登录游客能否看到？当前 PostImage 三级降级（直连/带凭据 blob/失败占位）是否足够？blob 方案的 objectURL 泄漏问题是否存在（fetchAsObjectUrl 创建后谁负责 revoke）？请核查 PostImage.tsx 是否真的 revoke。\n2. ★关键缺陷：displayUrl() 依赖 localStorage 里的 customBaseUrl 与凭据来拼地址。这意味着「图片在哪」是每个访客本地决定，而非部署事实。若站长迁移到自建服务器，未改配置的老用户浏览器仍指向 Seafile。请判定这是否为设计缺陷，并给出修法（如把 base URL 改为构建期环境变量 VITE_IMAGE_BASE_URL）。\n3. 上传链路：Composer 上传成功后若用户放弃发帖，文件是否成为孤儿（无清理）？\n4. 删除链路：webdav.ts 有 deleteFile 但请核查是否有任何调用方；删帖时图片是否残留？\n5. 迁移链路：storage-migrate.mjs 的 copy 命令是否幂等、断点续传、并发安全？list/plan 对绝对 URL 的处理是否正确？\n6. 权限链路：Seafile 匿名只读的三种方案（公开资料库 / nginx 例外 / rclone 静态目录）各自的可行性与对本站的具体影响。\n7. CORS：浏览器直传 WebDAV 是否受同源策略限制？pan.ustc.edu.cn 是否返回 CORS 头？请用 Node fetch 实测 OPTIONS 预检并给出证据。\n输出：按「事项 → 现状 → 缺口 → 需要做什么 → 阻塞级别」组织。不要修改任何代码。",
+      "status": "pending",
+      "assignee": "dav-analyst",
+      "dependencies": [],
+      "attempt": 8,
+      "createdAt": 1789467555471,
+      "updatedAt": 1789484678727,
+      "reassigning": false
+    },
+    {
+      "id": "t3",
+      "profileSeedId": "audit-security",
+      "subject": "安全与凭据审计",
+      "description": "审计本方案的凭据与数据安全。读 src\\lib\\webdav.ts（凭据存取、authHeader）、src\\components\\SeafileSection.tsx（密码输入与显示）、src\\components\\PostImage.tsx、src\\lib\\storage.ts、.gitignore、.env.example。\n逐项核查并给出判定：\n1. 凭据存 localStorage 的 XSS 暴露面：本站是否有 XSS 入口（检查 PostCard.tsx 的 renderBody 是否对用户正文做了转义/白名单，是否存在 dangerouslySetInnerHTML）。\n2. 密码是否会进入日志或错误信息：webdav.ts 的 console.warn/错误消息里是否可能带上密码或 URL 中的凭据。\n3. SeafileSection.tsx 的「显示密码」按钮与自动填充（autoComplete=\"current-password\"）是否合理。\n4. .env 是否被 .gitignore 覆盖；仓库中是否已有密钥被提交（运行 git log --oneline -5 与 git ls-files 检查 .env 是否入库）。\n5. 上传校验：storage.ts 的 validateImage 只校验 MIME（file.type），而 MIME 由客户端提供可伪造。评估是否需要 magic bytes 校验，以及 8MB 上限是否足够。\n6. 匿名可读方案的副作用：把资料库设为公开后，是否会导致整个校园盘内容被枚举（列出目录）？这与「只开放 kela-images 子目录」相比风险差异多大。\n输出：按「风险 → 位置(文件:行号) → 影响 → 修法 → 严重度」组织。不要修改任何代码。只有在你实际执行了 git 命令时才报告其结果。",
+      "status": "pending",
+      "assignee": "security",
+      "dependencies": [],
+      "attempt": 8,
+      "createdAt": 1789467555471,
+      "updatedAt": 1789484678742,
+      "reassigning": false
+    },
+    {
+      "id": "t4",
+      "profileSeedId": "merge",
+      "subject": "汇总为单一架构文档",
+      "description": "把 audit-structure、audit-bridge、audit-security 三份结论合并成一份中文架构文档 docs/ARCHITECTURE-STORAGE.md。\n要求：\n1. 去重：同一问题被多方提及时只写一次，并注明涉及的维度（结构/桥接/安全）。\n2. 裁决冲突：若三方结论矛盾，必须指出矛盾点并给出你的判断与理由。\n3. 结构固定为七节：一、现状总览（一张分层图 + 数据流）；二、结构问题与优化方案；三、WebDAV 桥接全景（已完成 / 进行中 / 待办）；四、安全边界与红线；五、可迁移性设计（相对路径机制 + 迁移三步）；六、优先级排序表（P0/P1/P2，每项含影响面与预估改动文件）；七、已知限制与不做什么（明确写出「WebDAV 不能替代数据库」的理由）。\n4. 每条结论必须带文件:行号证据，禁止无出处的断言。\n5. 与 README-DEV.md 第八节保持一致，如有更新请在文档中标注「建议同步到 README-DEV.md」。\n6. 文档面向「几周后回来看的自己」，要能直接照着执行。\n同时更新 C:\\columa\\column----\\README-DEV.md，在第八节末尾加一段指向新文档的说明（不要动其它章节）。\n范围：只允许写 docs/ARCHITECTURE-STORAGE.md 与 README-DEV.md。",
+      "status": "cancelled",
+      "assignee": "captain",
+      "dependencies": [],
+      "attempt": 3,
+      "createdAt": 1789467555471,
+      "updatedAt": 1789467889819,
+      "reassigning": false,
+      "attemptId": "6c9a718a-5eac-497a-ba87-1b6cff97dbf5",
+      "output": "已由 captain 收回，原因是审批阶段依赖边丢失（t4 本应依赖 t1/t2/t3）。\n\n处置：退回共享池，待三份审计完成后重新指派给 writer。不要在此状态下产出文档。"
+    },
+    {
+      "id": "t5",
+      "profileSeedId": "verify",
+      "subject": "校验文档结论可定位且无矛盾",
+      "description": "独立校验 merge 的产物。读 docs/ARCHITECTURE-STORAGE.md，逐条抽查其中带文件:行号的断言：\n1. 随机抽取至少 12 条断言，打开对应文件核对行号与内容是否真的相符（行号偏移、内容不符都算失败）。\n2. 核对文档中所有「已实测」的事实是否与真实一致。必须重新运行：\n   node scripts/seafile-probe.mjs\n   确认输出仍是 401 Basic realm=\"Seafile Authentication\"；若文档写了别的结论，判为不符。\n3. 检查文档是否声称完成了实际未完成的改造（例如声称已修好 displayUrl 的 localStorage 缺陷，但代码未改）。\n4. 确认 README-DEV.md 第八节新增段落存在，且未破坏其它章节（与 git diff 对比确认只动了预期位置）。\n5. 运行 npx tsc -b，确认退出码为 0（writer 不应引入类型错误）。\n输出：问题清单，每条含文件:行号、问题、必须如何修。若无问题，明确说明抽查了哪些断言并全部通过。",
+      "status": "cancelled",
+      "assignee": "captain",
+      "dependencies": [],
+      "attempt": 4,
+      "createdAt": 1789467555471,
+      "updatedAt": 1789467948445,
+      "reassigning": false,
+      "attemptId": "ec1b5084-b933-462c-bc70-d9dead5542be",
+      "output": "已由 captain 收回：依赖的 t4（文档）已被取消，当前无可校验对象。\n\n处置：退回共享池，待 t4 重新产出文档后指派给 reviewer。"
+    }
+  ],
+  "taskSeq": 5,
+  "approvedAt": 1789467563881
+}

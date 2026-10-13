@@ -26,7 +26,14 @@
       "Bash(curl -s 'https://dplrwzzzdzhasblabyzl.supabase.co/rest/v1/posts?select=id,like_count,likes\\(count\\)' -H 'apikey: sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C' -H 'Authorization: Bearer sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C')",
       "Bash(lsof -ti:5173)",
       "Bash(xargs kill)",
-      "Bash(ipconfig getifaddr *)"
+      "Bash(ipconfig getifaddr *)",
+      "Bash(env)",
+      "Bash(reg query *)",
+      "Bash(npm --version)",
+      "Bash(cd c:/columa/column---- && printf 'VITE_SUPABASE_URL=https://dplrwzzzdzhasblabyzl.supabase.co\\\\nVITE_SUPABASE_ANON_KEY=sb_publishable_0qbB78QuNso604r1DnapJg_8dh0ap6C\\\\n' > .env && cat .env)"
+    ],
+    "additionalDirectories": [
+      "c:\\columa\\column----"
     ]
   }
 }

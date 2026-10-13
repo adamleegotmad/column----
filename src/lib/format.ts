@@ -37,3 +37,11 @@ export function compact(n: number): string {
   }
   return String(n)
 }
+
+/** 入学/毕业年份候选（近 40 年，倒序）。 */
+export function yearOptions(span = 40): number[] {
+  const current = new Date().getFullYear()
+  const list: number[] = []
+  for (let y = current; y >= current - span; y--) list.push(y)
+  return list
+}

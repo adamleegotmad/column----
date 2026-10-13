@@ -2,6 +2,9 @@ export type Gender = 'male' | 'female'
 
 export type ProfileType = 'alumni' | 'company' | 'lab' | 'club' | 'department'
 
+/** 学位层级：本科生/硕士生/博士生/博士后/其他 */
+export type Degree = 'undergrad' | 'master' | 'doctor' | 'postdoc' | 'other'
+
 /** 在校/校友 判定模式：auto=按入学年份自动，alumni=强制校友，student=强制在校 */
 export type AlumniMode = 'auto' | 'alumni' | 'student'
 
@@ -17,6 +20,10 @@ export interface Profile {
   school: string | null
   /** 入学年份（纯数字年份，如 2023；语义从「毕业年份」改为「入学年份」） */
   graduation_year: string | null
+  /** 学位层级 */
+  degree: Degree | null
+  /** 校友的毕业年份（分开存储，避免与「入学年份」混淆；在校生可留空） */
+  graduation_time: string | null
   is_alumni: boolean
   alumni_mode: AlumniMode
   profile_type: ProfileType | null
@@ -34,7 +41,6 @@ export interface Post {
   share_count: number
   created_at: string
   author?: Profile | null
-  topics?: Topic[]
   /** 当前用户是否已点赞（由前端查询填充） */
   liked_by_me?: boolean
 }
@@ -56,16 +62,9 @@ export interface Favorite {
   post?: Post | null
 }
 
+/** 热词（话题标签），mention_count 为被提及次数 */
 export interface Topic {
   id: string
   name: string
-  post_count: number
-}
-
-export interface Event {
-  id: string
-  title: string
-  location: string
-  start_at: string
-  description: string | null
+  mention_count: number
 }

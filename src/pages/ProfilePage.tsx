@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import Navbar from '@/components/Navbar'
 import PostCard from '@/components/PostCard'
 import Footer from '@/components/Footer'
+import PullToRefresh from '@/components/PullToRefresh'
 import { useAuth } from '@/hooks/useAuth'
 import { getProfile, fetchPostsByUser, fetchFavorites, updateProfile } from '@/lib/data'
 import { avatarStyle, avatarChar, displayName, GENDER_ICON, PROFILE_TYPE_LABEL, alumniBadge } from '@/lib/profile'
@@ -69,6 +70,24 @@ export default function ProfilePage() {
 
   const style = avatarStyle(profile)
 
+  // 下拉刷新：静默更新当前用户资料与帖子（失败时保留现有内容）
+  const handleRefresh = async () => {
+    if (!id) return
+    try {
+      const [p, po] = await Promise.all([getProfile(id), fetchPostsByUser(id)])
+      setProfile(p)
+      setPosts(po)
+      if (showFavorites) {
+        fetchFavorites(id)
+          .then(setFavorites)
+          .catch(() => {})
+      }
+      setError(null)
+    } catch {
+      // 刷新失败：保留现有内容
+    }
+  }
+
   // 保存个人简介
   const saveBio = async () => {
     if (!isSelf || bioSaving) return
@@ -85,6 +104,7 @@ export default function ProfilePage() {
   }
 
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-screen">
       <Navbar user={user} profile={meProfile} />
 
@@ -123,10 +143,10 @@ export default function ProfilePage() {
                     </span>
                   )}
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
-                    <span className="rounded-full bg-ustc-blue-light px-2 py-px text-[11px] font-semibold text-ustc-blue">
+                    <span className="rounded-full bg-ustc-blue-light px-2 py-px text-[0.6875rem] font-semibold text-ustc-blue">
                       中国科大
                     </span>
-                    <span className="rounded-full bg-ustc-blue-light px-2 py-px text-[11px] font-semibold text-ustc-blue">
+                    <span className="rounded-full bg-ustc-blue-light px-2 py-px text-[0.6875rem] font-semibold text-ustc-blue">
                       {profile.profile_type && profile.profile_type !== 'alumni'
                         ? PROFILE_TYPE_LABEL[profile.profile_type]
                         : alumniBadge(profile)}
@@ -224,7 +244,17 @@ export default function ProfilePage() {
                 (posts.length === 0 ? (
                   <p className="py-10 text-center text-sm text-ink-muted">暂无帖子</p>
                 ) : (
-                  posts.map((p) => <PostCard key={p.id} post={p} authed={!!user} />)
+                  posts.map((p) => (
+                    <PostCard
+                      key={p.id}
+                      post={p}
+                      authed={!!user}
+                      onPostDeleted={(id) => {
+                        setPosts((prev) => prev.filter((x) => x.id !== id))
+                        setFavorites((prev) => prev.filter((x) => x.id !== id))
+                      }}
+                    />
+                  ))
                 ))}
 
               {tab === 'favorites' &&
@@ -233,7 +263,17 @@ export default function ProfilePage() {
                     {isSelf ? '还没有收藏任何帖子' : '对方暂未收藏或收藏未公开'}
                   </p>
                 ) : (
-                  favorites.map((p) => <PostCard key={p.id} post={p} authed={!!user} />)
+                  favorites.map((p) => (
+                    <PostCard
+                      key={p.id}
+                      post={p}
+                      authed={!!user}
+                      onPostDeleted={(id) => {
+                        setFavorites((prev) => prev.filter((x) => x.id !== id))
+                        setPosts((prev) => prev.filter((x) => x.id !== id))
+                      }}
+                    />
+                  ))
                 ))}
             </div>
           </>
@@ -249,5 +289,6 @@ export default function ProfilePage() {
 
       <Footer />
     </div>
+    </PullToRefresh>
   )
 }

@@ -1,4 +1,4 @@
-import type { Profile, Gender, ProfileType } from './types'
+import type { Profile, Gender, ProfileType, Degree } from './types'
 
 /**
  * 头像配色（按性别区分默认头像，未填性别用中性色）。
@@ -65,6 +65,33 @@ export const PROFILE_TYPE_ORDER: ProfileType[] = [
   'department',
 ]
 
+/** 学位层级标签 */
+export const DEGREE_LABEL: Record<Degree, string> = {
+  undergrad: '本科生',
+  master: '硕士生',
+  doctor: '博士生',
+  postdoc: '博士后',
+  other: '其他',
+}
+
+export const DEGREE_ORDER: Degree[] = [
+  'undergrad',
+  'master',
+  'doctor',
+  'postdoc',
+  'other',
+]
+
+/** 学位标签；未设置时返回 null。 */
+export function degreeLabel(profile: Pick<Profile, 'degree'> | null | undefined): string | null {
+  return profile?.degree ? DEGREE_LABEL[profile.degree] : null
+}
+
+/** 学位标签，兜底「—」 */
+export function degreeLabelOrDash(profile: Pick<Profile, 'degree'> | null | undefined): string {
+  return degreeLabel(profile) ?? '—'
+}
+
 /**
  * 判定「在校」还是「校友」。
  * alumni_mode='alumni' 强制校友，'student' 强制在校；
@@ -83,9 +110,16 @@ export function isAlumni(profile: Pick<Profile, 'alumni_mode' | 'graduation_year
   return currentYear - year >= 4
 }
 
-/** 生成「校友 · 14级」或「在校 · 21级」这样的标签文本。 */
-export function alumniBadge(profile: Pick<Profile, 'alumni_mode' | 'graduation_year'> | null | undefined): string {
-  const year = profile?.graduation_year ? String(profile.graduation_year).slice(2) : ''
-  const suffix = year ? ` · ${year}级` : ''
-  return isAlumni(profile) ? `校友${suffix}` : `在校${suffix}`
+/** 生成「校友 · 14届」或「在校 · 21级」这样的标签文本。 */
+export function alumniBadge(
+  profile: Pick<Profile, 'alumni_mode' | 'graduation_year' | 'graduation_time'> | null | undefined
+): string {
+  const alumni = isAlumni(profile)
+  // 在校 → 显示入学年（写作「级」）；校友 → 显示毕业年（写作「届」，无毕业年则回退入学年）
+  const sourceYear = alumni
+    ? profile?.graduation_time || profile?.graduation_year
+    : profile?.graduation_year
+  const year = sourceYear ? String(sourceYear).slice(2) : ''
+  const suffix = year ? ` · ${year}${alumni ? '届' : '级'}` : ''
+  return alumni ? `校友${suffix}` : `在校${suffix}`
 }

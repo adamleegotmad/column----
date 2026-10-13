@@ -149,18 +149,3 @@ create policy "comments_insert" on public.comments
   for insert with check (auth.uid() = author_id);
 create policy "comments_delete" on public.comments
   for delete using (auth.uid() = author_id);
-
--- ── 示例数据（可选，便于对照 preview.html 验证） ──
-insert into public.topics (name, post_count) values
-  ('#上海校友聚会', 2300),
-  ('#科大回忆', 1800),
-  ('#职业发展', 1500),
-  ('#硅谷校友', 892),
-  ('#学术讨论', 756),
-  ('#也西湖', 643)
-on conflict (name) do nothing;
-
-insert into public.events (title, location, start_at, description) values
-  ('上海校友AI技术分享', '徐汇区 · 14:00', '2026-08-15T14:00:00+08:00', '从实验室到大模型：科大人在AI赛道的十年'),
-  ('北京校友迎新聚餐', '海淀区 · 18:30', '2026-08-22T18:30:00+08:00', null),
-  ('硅谷校友线上圆桌', 'Zoom · 10:00 (PT)', '2026-09-05T10:00:00-07:00', null);

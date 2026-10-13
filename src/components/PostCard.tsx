@@ -3,30 +3,41 @@ import { Link } from 'react-router-dom'
 import type { Post, Comment } from '@/lib/types'
 import { timeAgo, compact } from '@/lib/format'
 import { avatarStyle, avatarChar, displayName, GENDER_ICON, PROFILE_TYPE_LABEL, alumniBadge } from '@/lib/profile'
-import { toggleLike, checkLiked, fetchComments, createComment, toggleFavorite, checkFavorited } from '@/lib/data'
+import { toggleLike, checkLiked, fetchComments, createComment, toggleFavorite, checkFavorited, deletePost } from '@/lib/data'
+import { useAuth } from '@/hooks/useAuth'
+import PostImage from './PostImage'
 
 interface PostCardProps {
   post: Post
-  /** 当前是否已登录（未登录时点赞/评论提示登录） */
   authed: boolean
   onPostUpdated?: (updated: Post) => void
+  onPostDeleted?: (postId: string) => void
 }
 
-/** 帖子正文里的 #话题 高亮渲染 */
+const DELETE_WINDOW_MS = 24 * 60 * 60 * 1000
+
 function renderBody(body: string) {
-  const parts = body.split(/(#[一-龥A-Za-z0-9]+)/g)
-  return parts.map((part, i) =>
-    part.startsWith('#') ? (
-      <span key={i} className="cursor-pointer font-medium text-ustc-blue hover:underline">
-        {part}
-      </span>
-    ) : (
-      <span key={i}>{part}</span>
-    )
-  )
+  const parts = body.split(/(#[一-龥A-Za-z0-9_\-]+)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('#')) {
+      const name = part.slice(1)
+      return (
+        <Link
+          key={i}
+          to={`/topic/${encodeURIComponent(name)}`}
+          className="font-medium text-ustc-blue transition-colors hover:text-ustc-blue-dark"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </Link>
+      )
+    }
+    return <span key={i}>{part}</span>
+  })
 }
 
-export default function PostCard({ post, authed, onPostUpdated }: PostCardProps) {
+export default function PostCard({ post, authed, onPostUpdated, onPostDeleted }: PostCardProps) {
+  const { user } = useAuth()
   const author = post.author
   const style = avatarStyle(author)
 
@@ -37,8 +48,12 @@ export default function PostCard({ post, authed, onPostUpdated }: PostCardProps)
   const [commentOpen, setCommentOpen] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [busy, setBusy] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
-  // 初始化：拉取当前用户点赞状态
+  const isAuthor = !!user && user.id === post.author_id
+  const withinWindow = Date.now() - new Date(post.created_at).getTime() < DELETE_WINDOW_MS
+  const canDelete = isAuthor && withinWindow
+
   useEffect(() => {
     let cancelled = false
     checkLiked(post.id).then((v) => {
@@ -121,135 +136,161 @@ export default function PostCard({ post, authed, onPostUpdated }: PostCardProps)
     }
   }
 
+  const handleDelete = async () => {
+    if (!canDelete || deleting) return
+    if (!window.confirm('确定删除这条帖子吗？删除后无法恢复。')) return
+
+    setDeleting(true)
+    try {
+      await deletePost(post.id)
+      onPostDeleted?.(post.id)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '删除失败')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const profileLink = `/profile/${post.author_id}`
 
   return (
-    <div className="rounded-2xl border border-border-light bg-surface p-6 shadow-sm transition-shadow hover:shadow-md">
-      <div className="mb-3 flex items-center gap-3">
-        <Link to={profileLink}>
-          <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-bold"
-            style={{ background: style.background, color: style.color }}
-          >
-            {avatarChar(author)}
-          </div>
-        </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-1.5 text-[15px] font-semibold text-ink-primary">
-            <Link to={profileLink} className="hover:underline">
-              {displayName(author)}
-            </Link>
-            {author?.show_real_name &&
-              author.real_name &&
-              author.nickname && (
-                <span className="rounded bg-surface-secondary px-1.5 py-px text-[11px] font-normal text-ink-muted">
+    <article className="card-hover rounded-2xl border border-border/60 bg-surface p-6 shadow-sm">
+      <header className="mb-4 flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <Link to={profileLink}>
+            <div
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold ring-2 ring-ustc-blue/10"
+              style={{ background: style.background, color: style.color }}
+            >
+              {avatarChar(author)}
+            </div>
+          </Link>
+          <div>
+            <div className="flex items-center gap-2">
+              <Link to={profileLink} className="text-[0.9375rem] font-semibold text-ink-primary transition-colors hover:text-ustc-blue">
+                {displayName(author)}
+              </Link>
+              {author?.show_real_name && author.real_name && author.nickname && (
+                <span className="rounded-md bg-surface-secondary px-1.5 py-0.5 text-[0.6875rem] text-ink-muted">
                   {author.real_name}
                 </span>
               )}
-            {author?.gender && (
-              <span
-                title={author.gender === 'male' ? '男' : '女'}
-                className="text-xs font-bold"
-                style={{ color: author.gender === 'male' ? '#0055A4' : '#C71585' }}
-              >
-                {GENDER_ICON[author.gender]}
+              {author?.gender && (
+                <span
+                  title={author.gender === 'male' ? '男' : '女'}
+                  className="text-xs"
+                  style={{ color: author.gender === 'male' ? '#0055A4' : '#C71585' }}
+                >
+                  {GENDER_ICON[author.gender]}
+                </span>
+              )}
+            </div>
+            <div className="mt-1 flex items-center gap-2 text-xs text-ink-muted">
+              <span className="rounded-full bg-ustc-blue-10 px-2 py-0.5 text-[0.6875rem] font-medium text-ustc-blue">
+                {author?.profile_type && author.profile_type !== 'alumni'
+                  ? PROFILE_TYPE_LABEL[author.profile_type]
+                  : alumniBadge(author)}
               </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-ink-muted">
-            <span className="rounded-full bg-ustc-blue-light px-2 py-px text-[11px] font-semibold text-ustc-blue">
-              中国科大
-            </span>
-            <span className="rounded-full bg-ustc-blue-light px-2 py-px text-[11px] font-semibold text-ustc-blue">
-              {(() => {
-                const t = author?.profile_type
-                if (t && t !== 'alumni') {
-                  return PROFILE_TYPE_LABEL[t]
-                }
-                return alumniBadge(author)
-              })()}
-            </span>
-            <span>· {timeAgo(post.created_at)}</span>
+              <span>·</span>
+              <span>{timeAgo(post.created_at)}</span>
+            </div>
           </div>
         </div>
+
+        {canDelete && (
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            title="删除帖子（发布后 24 小时内可删）"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+          >
+            {deleting ? '删除中…' : '删除'}
+          </button>
+        )}
+      </header>
+
+      <div className="mb-4 text-[0.9375rem] leading-relaxed text-ink-primary">
+        {renderBody(post.body)}
       </div>
 
-      <div className="mb-3.5 text-[15px] leading-[1.75]">{renderBody(post.body)}</div>
+      {post.image_url && <PostImage stored={post.image_url} />}
 
-      {post.image_url && (
-        <img
-          src={post.image_url}
-          alt=""
-          className="mb-3.5 max-h-[360px] w-full rounded-md object-cover"
-        />
-      )}
-
-      <div className="flex gap-6 border-t border-border-light pt-3">
-        <Action
+      <footer className="flex items-center gap-1 border-t border-border/60 pt-4">
+        <ActionButton
           active={liked}
-          icon={liked ? '❤️' : '🤍'}
-          label={compact(likeCount)}
+          activeColor="text-red-500"
           onClick={handleLike}
-        />
-        <Action
-          icon="💬"
-          label={`${compact(comments.length || post.comment_count)} 评论`}
-          onClick={toggleComments}
-        />
-        <Action icon="🔄" label={`${compact(post.share_count)} 转发`} />
-        <Action
-          active={favorited}
-          icon={favorited ? '⭐' : '☆'}
-          label="收藏"
-          onClick={handleFavorite}
-        />
-      </div>
+        >
+          <svg className="h-5 w-5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+          <span className="text-sm">{compact(likeCount)}</span>
+        </ActionButton>
 
-      {/* 评论区 */}
+        <ActionButton
+          active={commentOpen}
+          activeColor="text-ustc-blue"
+          onClick={toggleComments}
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <span className="text-sm">{compact(comments.length || post.comment_count)}</span>
+        </ActionButton>
+
+        <ActionButton
+          active={favorited}
+          activeColor="text-amber-500"
+          onClick={handleFavorite}
+        >
+          <svg className="h-5 w-5" fill={favorited ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        </ActionButton>
+      </footer>
+
       {commentOpen && (
-        <div className="mt-3 border-t border-border-light pt-3">
+        <div className="mt-4 border-t border-border/60 pt-4">
           {comments.length === 0 && (
-            <p className="py-2 text-center text-xs text-ink-muted">暂无评论，来抢沙发～</p>
+            <p className="py-3 text-center text-xs text-ink-muted">暂无评论，来抢沙发～</p>
           )}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {comments.map((c) => (
-              <div key={c.id} className="flex gap-2.5">
+              <div key={c.id} className="flex gap-3">
                 <div
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
                   style={{ ...avatarStyle(c.author), width: 32, height: 32 }}
                 >
                   {avatarChar(c.author)}
                 </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[13px] font-semibold text-ink-primary">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[0.8125rem] font-semibold text-ink-primary">
                       {displayName(c.author)}
                     </span>
-                    {c.author?.show_real_name &&
-                      c.author.real_name &&
-                      c.author.nickname && (
-                        <span className="rounded bg-surface-secondary px-1.5 py-px text-[10px] font-normal text-ink-muted">
-                          {c.author.real_name}
-                        </span>
-                      )}
+                    {c.author?.show_real_name && c.author.real_name && c.author.nickname && (
+                      <span className="rounded bg-surface-secondary px-1.5 py-0.5 text-[0.625rem] text-ink-muted">
+                        {c.author.real_name}
+                      </span>
+                    )}
                     {c.author?.gender && (
                       <span
                         title={c.author.gender === 'male' ? '男' : '女'}
-                        className="text-[11px] font-bold"
+                        className="text-[0.6875rem]"
                         style={{ color: c.author.gender === 'male' ? '#0055A4' : '#C71585' }}
                       >
                         {GENDER_ICON[c.author.gender]}
                       </span>
                     )}
-                    <span className="text-[11px] text-ink-muted">{timeAgo(c.created_at)}</span>
+                    <span className="text-[0.6875rem] text-ink-muted">{timeAgo(c.created_at)}</span>
                   </div>
-                  <p className="text-[13px] leading-relaxed text-ink-primary">{c.body}</p>
+                  <p className="mt-1 text-[0.8125rem] leading-relaxed text-ink-primary">{c.body}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-3 flex gap-2">
+          <div className="mt-4 flex gap-2">
             <input
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
@@ -258,42 +299,43 @@ export default function PostCard({ post, authed, onPostUpdated }: PostCardProps)
               }}
               placeholder={authed ? '写下你的评论…' : '登录后可评论'}
               disabled={!authed}
-              className="flex-1 rounded-md border-[1.5px] border-border px-3 py-2 text-sm outline-none transition-colors focus:border-ustc-blue disabled:opacity-60"
+              className="flex-1 rounded-xl border border-border bg-surface-secondary px-4 py-2.5 text-sm outline-none transition-all focus:border-ustc-blue focus:bg-surface disabled:opacity-60"
             />
             <button
               onClick={submitComment}
               disabled={!authed || !commentText.trim() || busy}
-              className="rounded-md bg-ustc-blue px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-ustc-blue-dark disabled:opacity-50"
+              className="rounded-xl bg-ustc-blue px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-ustc-blue-dark disabled:opacity-50"
             >
               发送
             </button>
           </div>
         </div>
       )}
-    </div>
+    </article>
   )
 }
 
-function Action({
-  icon,
-  label,
+function ActionButton({
+  children,
   onClick,
   active,
+  activeColor,
 }: {
-  icon: string
-  label: string
-  onClick?: () => void
+  children: React.ReactNode
+  onClick: () => void
   active?: boolean
+  activeColor?: string
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[13px] transition-colors ${
-        active ? 'text-ustc-blue' : 'text-ink-muted'
-      } hover:bg-ustc-blue-10 hover:text-ustc-blue`}
+      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 transition-all ${
+        active
+          ? `${activeColor} bg-surface-secondary`
+          : 'text-ink-muted hover:bg-surface-secondary hover:text-ink-secondary'
+      }`}
     >
-      <span>{icon}</span>
-      <span>{label}</span>
+      {children}
     </button>
   )
 }

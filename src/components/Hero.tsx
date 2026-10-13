@@ -1,36 +1,55 @@
-const stats = [
-  { num: '12,860', label: '认证校友' },
-  { num: '38', label: '城市分会' },
-  { num: '156', label: '本月活动' },
-]
+import { useEffect, useState } from 'react'
+import TrendingTopicsStrip from '@/components/TrendingTopicsStrip'
 
 export default function Hero() {
+  const [alumniCount, setAlumniCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    import('@/lib/supabase').then(({ supabase }) => {
+      supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .then(({ count, error }) => {
+          if (cancelled || error) return
+          setAlumniCount(count ?? 0)
+        })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-[#F0F5FB] via-[#E3ECF7] to-[#D6E3F3] px-6 pb-[72px] pt-16 text-center">
-      <div className="pointer-events-none absolute -top-[120px] -right-[120px] h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(0,85,164,0.06)_0%,transparent_70%)]" />
-      <div className="pointer-events-none absolute -bottom-[80px] -left-[80px] h-[300px] w-[300px] rounded-full bg-[radial-gradient(circle,rgba(0,85,164,0.04)_0%,transparent_70%)]" />
+    <section className="border-b border-border/60 bg-gradient-to-b from-surface to-surface-secondary px-6 py-12">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-col items-center gap-6 md:flex-row md:justify-between">
+          <div className="text-center md:text-left">
+            <h1 className="mb-2 text-3xl font-bold tracking-tight text-ink-primary md:text-4xl">
+              今天<span className="text-ustc-blue">科了</span>没？
+            </h1>
+            <p className="text-base text-ink-secondary">
+              无论你在哪里，科大永远是你的坐标原点。
+            </p>
+          </div>
 
-      <div className="relative z-1 mx-auto max-w-[720px]">
-        <h1 className="mb-3 text-[44px] font-extrabold tracking-wide text-ink-primary">
-          今天<span className="text-ustc-blue">科了</span>没？
-        </h1>
-        <p className="mb-8 text-[17px] leading-relaxed text-ink-secondary">
-          无论你在哪里，科大永远是你的坐标原点。
-        </p>
-        <a
-          href="#"
-          className="inline-flex items-center gap-1.5 rounded-md bg-ustc-blue px-7 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-ustc-blue-dark"
-        >
-          加入校友社区
-        </a>
-
-        <div className="mt-10 flex justify-center gap-12">
-          {stats.map((s) => (
-            <div key={s.label} className="text-center">
-              <div className="text-[28px] font-bold text-ustc-blue">{s.num}</div>
-              <div className="mt-0.5 text-[13px] text-ink-muted">{s.label}</div>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-ustc-blue">
+                {alumniCount === null ? '…' : alumniCount.toLocaleString()}
+              </div>
+              <div className="mt-0.5 text-xs text-ink-muted">认证校友</div>
             </div>
-          ))}
+            <div className="h-10 w-px bg-border" />
+            <div className="text-center">
+              <div className="text-2xl font-bold text-ink-muted">0</div>
+              <div className="mt-0.5 text-xs text-ink-muted">城市分会</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <TrendingTopicsStrip />
         </div>
       </div>
     </section>
